@@ -1,37 +1,28 @@
 const express = require('express');
 const cors = require('cors');
 const request = require('request');
-const bodyParser = require('body-parser'); // Importante: per gestire richieste POST con body JSON
+const bodyParser = require('body-parser'); // Per richieste POST con body JSON
 
 const app = express();
-const port = process.env.PORT || 3000; // Porta per il proxy
+const port = process.env.PORT || 3000;
 
-// Abilita CORS per tutte le origini (per il test).  In produzione, limita.
-app.use(cors());
+app.use(cors()); // CORS per tutte le origini (per ora)
+app.use(bodyParser.json()); // Parsing del body JSON
 
-// Abilita il parsing del body JSON
-app.use(bodyParser.json());
-
-// Gestisci le richieste POST alla radice ('/') del proxy
 app.post('/', (req, res) => {
-  // Estrai l'URL di PVGIS dal corpo della richiesta (chiave 'url')
-  const pvgisUrl = req.body.url;
+  const pvgisUrl = req.body.url; // Estrai l'URL dal corpo
 
-  // Verifica che l'URL di PVGIS sia presente
   if (!pvgisUrl) {
-    return res.status(400).send({message: "PVGIS URL mancante.", status: 400}); // Restituisci un errore 400 se l'URL è mancante
+    return res.status(400).send({message: "PVGIS URL mancante.", status: 400});
   }
 
-  console.log("Richiesta ricevuta dal proxy. Inoltro a:", pvgisUrl); // Log per il debugging
+  console.log("Richiesta ricevuta dal proxy. Inoltro a:", pvgisUrl);
 
-  // Inoltra la richiesta a PVGIS
   request(pvgisUrl, (error, response, body) => {
     if (error) {
-      console.error("Errore nell'inoltro della richiesta a PVGIS:", error);
-      return res.status(500).send({message: "Errore del proxy.", status: 500}); // Restituisci un errore 500
+      console.error("Errore nell'inoltro:", error);
+      return res.status(500).send({message: "Errore del proxy.", status: 500});
     }
-
-    // Invia la risposta di PVGIS al client (simulatore)
     res.status(response.statusCode).send(body);
   });
 });
