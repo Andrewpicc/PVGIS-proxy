@@ -1,34 +1,38 @@
 const express = require('express');
 const cors = require('cors');
 const request = require('request');
+const bodyParser = require('body-parser'); // Importante: per gestire richieste POST con body JSON
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors()); // Abilita CORS per tutte le origini
+// Abilita CORS per tutte le origini (per il test locale; in produzione, limita a origini specifiche)
+app.use(cors());
 
-app.use((req, res) => {
-  // 1. Estrai l'URL di PVGIS dal parametro di query 'url'
-  const pvgisUrl = req.query.url;
+// Abilita il parsing del body JSON per le richieste POST
+app.use(bodyParser.json());
 
-  // 2. Verifica se l'URL è presente
+// Gestisci le richieste POST a '/'
+app.post('/', (req, res) => {
+  // Estrai l'URL di PVGIS dal corpo della richiesta (chiave 'url')
+  const pvgisUrl = req.body.url;
+
+  // Verifica che l'URL di PVGIS sia presente
   if (!pvgisUrl) {
-    return res.status(400).send("Errore: URL di PVGIS mancante.");
+    return res.status(400).send("Errore: URL di PVGIS mancante."); // Restituisci un errore 400 se l'URL è mancante
   }
 
-  // 3. Log dell'URL (per debugging)
-  console.log("Richiesta ricevuta dal proxy. Inoltro a:", pvgisUrl);
+  console.log("Richiesta ricevuta dal proxy. Inoltro a:", pvgisUrl); // Log per il debugging
 
-  // 4. Inoltra la richiesta a PVGIS
+  // Inoltra la richiesta a PVGIS
   request(pvgisUrl, (error, response, body) => {
-    // 5. Gestisci eventuali errori nell'inoltro
     if (error) {
       console.error("Errore nell'inoltro della richiesta a PVGIS:", error);
-      return res.status(500).send("Errore del proxy.");
+      return res.status(500).send("Errore del proxy."); // Restituisci un errore 500 in caso di errore del proxy
     }
 
-    // 6. Invia la risposta di PVGIS al client (simulatore)
-    res.status(response.statusCode).send(body);
+    // Invia la risposta di PVGIS al client (simulatore)
+    res.status(response.statusCode).send(body); // Invia lo status code e il corpo della risposta originali
   });
 });
 
