@@ -20,7 +20,7 @@ app.post('/', (req, res) => {
 
   request(pvgisUrl, (error, response, body) => {
     if (error) {
-      console.error("Errore nell'inoltro:", error);
+      console.error("Errore inoltro:", error);
       return res.status(500).send({message: "Errore del proxy.", status: 500});
     }
     res.status(response.statusCode).send(body);
